@@ -1,0 +1,19 @@
+{
+  "githubOrg": "ganbarodigital",
+  "repoName": "ts-well-stated",
+  "packageName": "@ganbarodigital/well-stated",
+  "copyrightHolder": "Ganbaro Digital Ltd",
+  "copyrightWebsite": "https://ganbarodigital.com",
+  "packageContactEmail": "typescript@ganbarodigital.com",
+  "authorName": "Stuart Herbert",
+  "authorEmail": "stuherbert@ganbarodigital.com",
+  "authorWebsite": "https://ganbarodigital.com",
+  "license": "BSD-3-Clause",
+  "copyrightYear": 2020,
+  "packageDescription": "A type-safe, flux-inspired state store for CLI and API apps alike.",
+  "npmLicense": "BSD-3-Clause",
+  "branchingModel": "gitflow",
+  "packageIsScoped": true,
+  "autoGitInit": true,
+  "packageAccess": "public"
+}
