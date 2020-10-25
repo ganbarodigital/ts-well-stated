@@ -137,30 +137,22 @@ export class InterestsRegistry<E>
      * registered for any of the given `topics`.
      * @param topics
      * Which topics do we want to find interests for?
-     * @returns
-     * - `true` if at least one interest was found
-     * - `false` otherwise
      */
     public forEach(
         callback: (interest: E) => void,
         ...topics: string[]
-    ): boolean
+    ): void
     {
-        // keep track of what happened
-        let callbackCalled = false;
-
         topics.forEach((name) => {
             // shorthand
             const interests = this._theList[name] ?? [];
 
             interests.forEach((interest) => {
-                callbackCalled = true;
                 callback(interest);
             });
         });
 
         // all done
-        return callbackCalled;
     }
 
     /**

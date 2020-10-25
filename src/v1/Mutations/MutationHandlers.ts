@@ -131,7 +131,10 @@ export class MutationHandlers<
         }: Partial<NotifyHandlersOptions> = {}
     )
     {
-        const handlerCalled = this.extensions.forEach((handler) => {
+        let handlerCalled = false;
+
+        this.extensions.forEach((handler) => {
+            handlerCalled = true;
             handler(mutation, state, store, { onError });
         }, ...getClassNames(mutation));
 
