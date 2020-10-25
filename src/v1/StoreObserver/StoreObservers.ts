@@ -37,6 +37,7 @@ import { DateTime } from "luxon";
 
 import { ObservableEvent } from ".";
 import { AnyMutation } from "../Mutations";
+import { AnyState } from "../State";
 import { ExtensionUnsubscriber, StoreExtensions } from "../StoreExtensions";
 import { OutcomeUpdater } from "./OutcomeUpdater";
 import { StoreObserver } from "./StoreObserver";
@@ -44,14 +45,14 @@ import { StoreObserver } from "./StoreObserver";
 /**
  * `StoreObservers` manages a list of {@link StoreObserver} objects.
  *
- * @template T
- * - `T` is a type that describes all possible states of the store
+ * @template S
+ * - `S` is a type that describes all possible states of the store
  * @template M
  * - `M` is a type that describes all possible mutations that can be applied
  *   to the store
  */
 export class StoreObservers<
-    T extends object,
+    S extends AnyState,
     M extends AnyMutation
 >
 {
@@ -62,7 +63,7 @@ export class StoreObservers<
      * is interested in. An observer may be registered against multiple
      * mutation class names.
      */
-    public extensions: StoreExtensions<T,M,StoreObserver<T,M>>;
+    public extensions: StoreExtensions<S,M,StoreObserver<S,M>>;
 
     /**
      * `constructor()` creates a new `StoreObservers` object.
@@ -71,7 +72,7 @@ export class StoreObservers<
      * the initial list of {@link StoreObserver} objects that we should
      * call whenever {@link notifyObservers} is called.
      */
-    public constructor(observers: HashMap<StoreObserver<T,M>[]> = {})
+    public constructor(observers: HashMap<StoreObserver<S,M>[]> = {})
     {
         this.extensions = new StoreExtensions(observers);
     }
@@ -96,7 +97,7 @@ export class StoreObservers<
      * in the Store.
      */
     public registerObserver(
-        observer: StoreObserver<T,M>,
+        observer: StoreObserver<S,M>,
         ...mutationNames: string[]
     ): ExtensionUnsubscriber
     {
@@ -126,11 +127,11 @@ export class StoreObservers<
      */
     public forEach(
         mutation: M,
-        initialState: T,
-    ): OutcomeUpdater<T>
+        initialState: S,
+    ): OutcomeUpdater<S>
     {
         // what are we going to tell our observers?
-        const storeEvent: ObservableEvent<T,M> = {
+        const storeEvent: ObservableEvent<S,M> = {
             mutation,
             initialState,
             outcome: initialState,
@@ -139,13 +140,13 @@ export class StoreObservers<
 
         // keep track of how we're going to tell our observers
         // what the outcome us
-        const updaterFns: OutcomeUpdater<T>[] = [];
+        const updaterFns: OutcomeUpdater<S>[] = [];
 
         this.extensions.forEach(mutation, (observer) => {
             updaterFns.push(observer.beforeMutationApplied(storeEvent))
         });
 
-        return (outcome: AppErrorOr<T>, completedAt: Date) => {
+        return (outcome: AppErrorOr<S>, completedAt: Date) => {
             // optimisation
             if (updaterFns.length === 0) {
                 return;

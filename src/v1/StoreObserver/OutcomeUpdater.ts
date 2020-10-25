@@ -33,6 +33,7 @@
 //
 
 import { AppErrorOr } from "@safelytyped/core-types";
+import { AnyState } from "../State";
 
 /**
  * `OutcomeUpdater` is a function type. This is a function that can
@@ -41,7 +42,8 @@ import { AppErrorOr } from "@safelytyped/core-types";
  * This function GUARANTEES that observers will be given a read-only
  * copy of the store's state, if the outcome is not an {@link AppError}.
  *
- * @template T
- * - `T` is a type that describes all possible states of the store
+ * @template S
+ * - `S` is a type that describes all possible states of the store
  */
-export type OutcomeUpdater<T> = (outcome: AppErrorOr<T>, completedAt: Date) => void;
+export type OutcomeUpdater<S extends AnyState>
+    = (outcome: AppErrorOr<S>, completedAt: Date) => void;

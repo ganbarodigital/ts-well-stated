@@ -31,41 +31,9 @@
 // ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 //
-import { AnyMutation } from "../Mutations";
-import { OutcomeUpdater } from "./OutcomeUpdater";
-import { ObservableEvent } from "./ObservableEvent";
-import { AnyState } from "../State";
 
 /**
- * `StoreObserver` is an object that wants to be told of changes made
- * to a {@link Store}.
- *
- * Unlike {@link StoreSubscriber} functions, `StoreObserver` objects:
- * - get notified before and after a change has been made
- * - should always succeed (ie, never throw an exception)
- * - should never attempt to change the store (that's why we never tell
- *   the observer which Store is being mutated)
- *
- * We've added them for debugging / unit testing support. You're welcome
- * to use them creatively.
- *
- * @template S
- * - `S` is a type that describes all possible states of the store
- * @template M
- * - `M` is a type that describes all possible mutations that can be applied
- *   to the store
+ * `AnyState` represents all possible states that a {@link Store} can be
+ * defined with.
  */
-export interface StoreObserver<S extends AnyState, M extends AnyMutation>
-{
-    /**
-     * `beforeMutationApplied()` is called to notify the StoreObserver
-     * that the {@link Store} is about to be mutated.
-     *
-     * @param event
-     * details of the mutation that is about to begin
-     *
-     * @returns a function that you need to call when the mutation has
-     * completed
-     */
-    beforeMutationApplied(event: ObservableEvent<S,M>): OutcomeUpdater<S>;
-}
+export type AnyState = object;

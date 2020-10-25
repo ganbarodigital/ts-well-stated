@@ -17,12 +17,13 @@
 // <https://www.gnu.org/licenses/>.
 //
 import { AnyMutation } from ".";
+import { AnyState } from "../State";
 import { Store } from "../Store/Store";
 import { StoreOptions } from "../Store/StoreOptions";
 
 
 /**
- * `MutationHandler<T,M>` is a function type. It describes functions
+ * `MutationHandler<S,M>` is a function type. It describes functions
  * that apply a mutation to the store.
  *
  * The function will make live edits to the `state`.
@@ -30,17 +31,17 @@ import { StoreOptions } from "../Store/StoreOptions";
  * If the function runs into a problem (ie it needs to reject the mutation
  * for any reason), it needs to throw an {@link Error}.
  *
- * @template T
- * - `T` is a type that describes all possible states of the store
+ * @template S
+ * - `S` is a type that describes all possible states of the store
  * @template M
  * - `M` is a type that describes all possible mutations that can be applied
  *   to the store
  *
  * @param {M} mutation
  * - this is the state change that needs to be applied to the Store
- * @param {T} state
+ * @param {S} state
  * - this is the current state that needs to be changed
- * @param {Store<T,M>} store
+ * @param {Store<S,M>} store
  * - this is the store that the state is held within (in case you want to
  *   trigger more changes)
  *
@@ -48,10 +49,10 @@ import { StoreOptions } from "../Store/StoreOptions";
  * - an {@link AppError} if this mutation causes a problem, or
  * - `null` otherwise
  */
-export type MutationHandler<T extends object, M extends AnyMutation>
+export type MutationHandler<S extends AnyState, M extends AnyMutation>
     = (
         mutation: M,
-        state: T,
-        store: Store<T,M>,
+        state: S,
+        store: Store<S,M>,
         options?: Partial<StoreOptions>,
     ) => void;

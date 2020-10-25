@@ -34,6 +34,7 @@
 import { HashMap, THROW_THE_ERROR } from "@safelytyped/core-types";
 
 import { AnyMutation } from "../Mutations";
+import { AnyState } from "../State";
 import { Store, StoreOptions } from "../Store";
 import { StoreExtensions, ExtensionUnsubscriber } from "../StoreExtensions";
 import { StoreSubscriber } from "./StoreSubscriber";
@@ -41,14 +42,14 @@ import { StoreSubscriber } from "./StoreSubscriber";
 /**
  * `StoreSubscribers` manages a list of {@link StoreSubscriber}s.
  *
- * @template T
- * - `T` is a type that describes all possible states of the store
+ * @template S
+ * - `S` is a type that describes all possible states of the store
  * @template M
  * - `M` is a type that describes all possible mutations that can be applied
  *   to the store
  */
 export class StoreSubscribers<
-    T extends object,
+    S extends AnyState,
     M extends AnyMutation
 > {
 
@@ -56,7 +57,7 @@ export class StoreSubscribers<
      * `extensions` holds a list of functions that apply changes to a
      * {@link Store}.
      */
-    public extensions: StoreExtensions<T,M,StoreSubscriber<T,M>>;
+    public extensions: StoreExtensions<S,M,StoreSubscriber<S,M>>;
 
     /**
      * `constructor()` builds a new `StoreSubscribers` object.
@@ -65,7 +66,7 @@ export class StoreSubscribers<
      * The initial list of functions that want to be notified about changes
      * to the state of the {@link Store}.
      */
-    public constructor(subscribers: HashMap<StoreSubscriber<T,M>[]> = {})
+    public constructor(subscribers: HashMap<StoreSubscriber<S,M>[]> = {})
     {
         this.extensions = new StoreExtensions(subscribers);
     }
@@ -92,7 +93,7 @@ export class StoreSubscribers<
      * in the Store.
      */
     public registerSubscriber(
-        fn: StoreSubscriber<T,M>,
+        fn: StoreSubscriber<S,M>,
         ...mutationNames: string[]
     ): ExtensionUnsubscriber
     {
@@ -118,8 +119,8 @@ export class StoreSubscribers<
     public forEach
     (
         mutation: M,
-        state: T,
-        store: Store<T,M>,
+        state: S,
+        store: Store<S,M>,
         {
             onError = THROW_THE_ERROR
         }: Partial<StoreOptions> = {}

@@ -36,6 +36,7 @@ import { copy } from "copy-anything";
 import { DateTime } from "luxon";
 
 import { AnyMutation, MutationHandlers } from "../Mutations";
+import { AnyState } from "../State";
 import { StoreGuards } from "../StoreGuard";
 import { StoreObservers } from "../StoreObserver";
 import { StoreSubscribers } from "../StoreSubscriber";
@@ -58,27 +59,30 @@ import { NotifyHandlersOptions } from "./NotifyHandlersOptions";
  * correctness over performance. In particular, we do make deep copies
  * (plural!) of the Store's internal state whenever you apply a mutation.
  *
- * @template T
- * - `T` is a type that describes all possible states of the store
+ * @template S
+ * - `S` is a type that describes all possible states of the store
  * @template M
  * - `M` is a type that describes all possible mutations that can be applied
  *   to the store
  */
-export class Store<T extends object, M extends AnyMutation>
+export class Store<
+    S extends AnyState,
+    M extends AnyMutation
+>
 {
     /**
      * `_state` holds the current state of the store.
      *
      * @protected
      */
-    protected _state: T;
+    protected _state: S;
 
     /**
      * `guards` managers the functions that are responsible for validating
      * mutations before they are applied to the Store. The store calls
      * these functions whenever you pass a mutation into {@link apply}().
      */
-    public guards: StoreGuards<T,M>;
+    public guards: StoreGuards<S,M>;
 
     /**
      * `handlers` holds a list of functions that are responsible for
@@ -87,7 +91,7 @@ export class Store<T extends object, M extends AnyMutation>
      *
      * Handlers can throw exceptions to reject a change to the store.
      */
-    public handlers: MutationHandlers<T,M>;
+    public handlers: MutationHandlers<S,M>;
 
     /**
      * `subscribers` manages a list of functions that want to be notified
@@ -98,7 +102,7 @@ export class Store<T extends object, M extends AnyMutation>
      * and they can reject (they can throw exceptions to reject changes
      * to the store).
      */
-    public subscribers: StoreSubscribers<T,M>;
+    public subscribers: StoreSubscribers<S,M>;
 
     /**
      * `observers` holds a list of objects that want to be notified
@@ -108,7 +112,7 @@ export class Store<T extends object, M extends AnyMutation>
      * They're intended to be passive subscribers, perhaps for debugging
      * or testing purposes.
      */
-    public observers: StoreObservers<T,M>;
+    public observers: StoreObservers<S,M>;
 
     /**
      * `constructor` creates a new Store.
@@ -130,17 +134,17 @@ export class Store<T extends object, M extends AnyMutation>
      * applied a mutation to the Store's initial state.
      */
     public constructor(
-        initialState: T,
+        initialState: S,
         {
             guards = new StoreGuards(),
             handlers = new MutationHandlers(),
             observers = new StoreObservers(),
             subscribers = new StoreSubscribers(),
         }: Partial<{
-            guards: StoreGuards<T,M>,
-            handlers: MutationHandlers<T,M>,
-            observers: StoreObservers<T,M>,
-            subscribers: StoreSubscribers<T,M>,
+            guards: StoreGuards<S,M>,
+            handlers: MutationHandlers<S,M>,
+            observers: StoreObservers<S,M>,
+            subscribers: StoreSubscribers<S,M>,
         }> = {}
     )
     {
@@ -250,7 +254,7 @@ export class Store<T extends object, M extends AnyMutation>
      * NOTE: we do not return a clone of the state (for performance reasons).
      * Don't abuse this!
      */
-    public get state(): Readonly<T> {
+    public get state(): Readonly<S> {
         return this._state;
     }
 }

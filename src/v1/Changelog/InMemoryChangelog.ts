@@ -34,6 +34,7 @@
 import { AppErrorOr } from "@safelytyped/core-types";
 
 import { AnyMutation } from "../Mutations";
+import { AnyState } from "../State";
 import { ObservableEvent } from "../StoreObserver";
 import { Changelog } from "./Changelog";
 import { ChangelogEntry } from "./ChangelogEntry";
@@ -44,13 +45,13 @@ import { ChangelogEntry } from "./ChangelogEntry";
  *
  * Use it for unit testing and debugging purposes.
  */
-export class InMemoryChangelog<T extends object, M extends AnyMutation>
-implements Changelog<T, M>
+export class InMemoryChangelog<S extends AnyState, M extends AnyMutation>
+implements Changelog<S, M>
 {
     /**
      * `_theLog` holds our list of observered changes.
      */
-    protected _theLog: ChangelogEntry<T, M>[] = [];
+    protected _theLog: ChangelogEntry<S, M>[] = [];
 
     /**
      * `beforeMutationApplied()` is called by a {@link Store} to tell us
@@ -59,10 +60,10 @@ implements Changelog<T, M>
      * @param event
      * details about the mutation that is about to be applied
      */
-    public beforeMutationApplied(event: ObservableEvent<T, M>) {
+    public beforeMutationApplied(event: ObservableEvent<S, M>) {
         this._theLog.push(event);
 
-        return (outcome: AppErrorOr<T>, completedAt: Date) => {
+        return (outcome: AppErrorOr<S>, completedAt: Date) => {
             event.outcome = outcome;
             event.completedAt = completedAt;
         }

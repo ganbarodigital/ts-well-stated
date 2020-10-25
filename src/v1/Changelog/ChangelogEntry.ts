@@ -32,8 +32,9 @@
 // POSSIBILITY OF SUCH DAMAGE.
 //
 import { AnyMutation } from "../Mutations";
+import { AnyState } from "../State";
 import { ObservableEvent } from "../StoreObserver";
 
 
-export interface ChangelogEntry<T extends object, M extends AnyMutation>
-extends ObservableEvent<T,M> { }
+export interface ChangelogEntry<S extends AnyState, M extends AnyMutation>
+extends ObservableEvent<S,M> { }

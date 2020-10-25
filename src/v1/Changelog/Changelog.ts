@@ -32,6 +32,7 @@
 // POSSIBILITY OF SUCH DAMAGE.
 //
 import { AnyMutation } from "../Mutations";
+import { AnyState } from "../State";
 import { ObservableEvent, StoreObserver } from "../StoreObserver";
 
 
@@ -39,12 +40,12 @@ import { ObservableEvent, StoreObserver } from "../StoreObserver";
  * `Changelog` is a {@link StoreObserver}. Use it to inspect what has
  * happened inside your {@link Store}.
  */
-export interface Changelog<T extends object, M extends AnyMutation>
-extends StoreObserver<T,M>
+export interface Changelog<S extends AnyState, M extends AnyMutation>
+extends StoreObserver<S,M>
 {
     truncate(): void;
 
     toJson(): string;
 
-    log: ObservableEvent<T,M>[];
+    log: ObservableEvent<S,M>[];
 }

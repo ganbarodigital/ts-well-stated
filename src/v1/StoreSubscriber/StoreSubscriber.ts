@@ -19,27 +19,28 @@
 import { AppErrorOr } from "@safelytyped/core-types";
 
 import { AnyMutation } from "../Mutations";
+import { AnyState } from "../State";
 import { Store, StoreOptions } from "../Store";
 
 /**
- * `StoreSubscriber<T,M>` is a function type. It describes functions
+ * `StoreSubscriber<S,M>` is a function type. It describes functions
  * that get notified when a mutation has been applied to the store.
  *
  * Each `StoreSubscriber` can:
  * - react: it can call the {@link Store} to apply more mutations
  * - reject: it can throw Errors to reject the mutation
  *
- * @template T
- * - `T` is a type that describes all possible states of the store
+ * @template S
+ * - `S` is a type that describes all possible states of the store
  * @template M
  * - `M` is a type that describes all possible mutations that can be applied
  *   to the store
  *
  * @param {M} mutation
  * - this is the state change that has been applied to the Store
- * @param {T} state
+ * @param {S} state
  * - this is the new state in the store
- * @param {Store<T,M>} store
+ * @param {Store<S,M>} store
  * - this is the store that the state is held within (in case you want to
  *   trigger more changes)
  *
@@ -47,10 +48,10 @@ import { Store, StoreOptions } from "../Store";
  * - an {@link AppError} if this mutation causes a problem, or
  * - `null` otherwise
  */
-export type StoreSubscriber<T extends object,M extends AnyMutation>
+export type StoreSubscriber<S extends AnyState, M extends AnyMutation>
     = (
         mutation: M,
-        state: T,
-        store: Store<T,M>,
+        state: S,
+        store: Store<S,M>,
         options?: Partial<StoreOptions>,
     ) => AppErrorOr<null>;

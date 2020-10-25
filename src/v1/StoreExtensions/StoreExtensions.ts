@@ -34,20 +34,21 @@
 import { getClassNames, HashMap } from "@safelytyped/core-types";
 
 import { AnyMutation } from "../Mutations";
+import { AnyState } from "../State";
 import { ExtensionUnsubscriber } from "./ExtensionUnsubscriber";
 
 /**
  * `StoreExtensions` manages a list of functions or objects that a
  * {@link Store} uses to deliver its functionality.
  *
- * @template T
- * - `T` is a type that describes all possible states of the store
+ * @template S
+ * - `S` is a type that describes all possible states of the store
  * @template M
  * - `M` is a type that describes all possible mutations that can be applied
  *   to the store
  */
 export class StoreExtensions<
-    T extends object,
+    S extends AnyState,
     M extends AnyMutation,
     E
 >

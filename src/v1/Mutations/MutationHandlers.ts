@@ -35,6 +35,7 @@ import { HashMap, THROW_THE_ERROR } from "@safelytyped/core-types";
 
 import { AnyMutation } from ".";
 import { UnhandledMutationError } from "../Errors";
+import { AnyState } from "../State";
 import { Store } from "../Store";
 import { NotifyHandlersOptions } from "../Store/NotifyHandlersOptions";
 import { StoreExtensions, ExtensionUnsubscriber } from "../StoreExtensions";
@@ -44,14 +45,14 @@ import { MutationHandler } from "./MutationHandler";
  * `MutationHandlers` manages a list of functions that apply changes
  * (known as mutations) to a {@link Store}.
  *
- * @template T
- * - `T` is a type that describes all possible states of the store
+ * @template S
+ * - `S` is a type that describes all possible states of the store
  * @template M
  * - `M` is a type that describes all possible mutations that can be applied
  *   to the store
  */
 export class MutationHandlers<
-    T extends object,
+    S extends AnyState,
     M extends AnyMutation
 >
 {
@@ -59,7 +60,7 @@ export class MutationHandlers<
      * `extensions` holds a list of functions that apply changes to a
      * {@link Store}.
      */
-    public extensions: StoreExtensions<T,M,MutationHandler<T,M>>;
+    public extensions: StoreExtensions<S,M,MutationHandler<S,M>>;
 
     /**
      * `constructor()` creates a new {@link MutationHandlers} object.
@@ -67,7 +68,7 @@ export class MutationHandlers<
      * @param handlers
      * the initial list of functions to start with
      */
-    public constructor(handlers: HashMap<MutationHandler<T,M>[]> = {})
+    public constructor(handlers: HashMap<MutationHandler<S,M>[]> = {})
     {
         this.extensions = new StoreExtensions(handlers);
     }
@@ -90,7 +91,7 @@ export class MutationHandlers<
      * call this function if you ever need to unsubscribe your handler
      */
     public registerHandler(
-        fn: MutationHandler<T,M>,
+        fn: MutationHandler<S,M>,
         ...mutationNames: string[]
     ): ExtensionUnsubscriber
     {
@@ -122,8 +123,8 @@ export class MutationHandlers<
     public forEach
     (
         mutation: M,
-        state: T,
-        store: Store<T,M>,
+        state: S,
+        store: Store<S,M>,
         {
             onUnhandledMutation = THROW_THE_ERROR,
             onError = THROW_THE_ERROR

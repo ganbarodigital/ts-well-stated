@@ -32,6 +32,8 @@
 // POSSIBILITY OF SUCH DAMAGE.
 //
 
+import { AnyState } from "../State";
+
 /**
  * `Mutation` is the base class for all mutations.
  *
@@ -39,9 +41,9 @@
  * supports. The {@link Store} uses the mutation's class name to find the
  * right handler(s) / observer(s) / subscriber(s) to process the mutation.
  */
-export class Mutation<T> {
-    public readonly data: T;
-    public constructor(data: T) {
+export class Mutation<S extends AnyState> {
+    public readonly data: S;
+    public constructor(data: S) {
         this.data = data;
     }
 }

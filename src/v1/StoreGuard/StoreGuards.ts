@@ -34,6 +34,7 @@
 import { HashMap, THROW_THE_ERROR } from "@safelytyped/core-types";
 
 import { AnyMutation } from "../Mutations";
+import { AnyState } from "../State";
 import { StoreOptions } from "../Store";
 import { ExtensionUnsubscriber, StoreExtensions } from "../StoreExtensions";
 import { StoreGuard } from "./StoreGuard";
@@ -41,14 +42,14 @@ import { StoreGuard } from "./StoreGuard";
 /**
  * `StoreGuards` manages a list of {@link StoreGuard}s.
  *
- * @template T
- * - `T` is a type that describes all possible states of the store
+ * @template S
+ * - `S` is a type that describes all possible states of the store
  * @template M
  * - `M` is a type that describes all possible mutations that can be applied
  *   to the store
  */
 export class StoreGuards<
-    T extends object,
+    S extends AnyState,
     M extends AnyMutation
 > {
 
@@ -56,7 +57,7 @@ export class StoreGuards<
      * `extensions` holds a list of functions that apply changes to a
      * {@link Store}.
      */
-    public extensions: StoreExtensions<T,M,StoreGuard<T,M>>;
+    public extensions: StoreExtensions<S,M,StoreGuard<S,M>>;
 
     /**
      * `constructor()` builds a new `StoreGuard` object.
@@ -65,7 +66,7 @@ export class StoreGuards<
      * The initial list of functions that want to be notified about upcoming
      * changes to the state of the {@link Store}.
      */
-    public constructor(guards: HashMap<StoreGuard<T,M>[]> = {})
+    public constructor(guards: HashMap<StoreGuard<S,M>[]> = {})
     {
         this.extensions = new StoreExtensions(guards);
     }
@@ -92,7 +93,7 @@ export class StoreGuards<
      * in the Store.
      */
     public registerGuard(
-        fn: StoreGuard<T,M>,
+        fn: StoreGuard<S,M>,
         ...mutationNames: string[]
     ): ExtensionUnsubscriber
     {
@@ -116,7 +117,7 @@ export class StoreGuards<
     public forEach
     (
         mutation: M,
-        state: T,
+        state: S,
         {
             onError = THROW_THE_ERROR
         }: Partial<StoreOptions> = {}

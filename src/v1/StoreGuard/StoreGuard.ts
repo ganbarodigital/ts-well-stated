@@ -18,33 +18,34 @@
 //
 
 import { AnyMutation } from "../Mutations";
+import { AnyState } from "../State";
 import { StoreOptions } from "../Store";
 
 /**
- * `StoreGuard<T,M>` is a function type. It describes functions
+ * `StoreGuard<S,M>` is a function type. It describes functions
  * that get notified before a mutation is applied to the store.
  *
  * Each `StoreGuard` can:
  * - reject: it can throw Errors to reject the mutation
  *
- * @template T
- * - `T` is a type that describes all possible states of the store
+ * @template S
+ * - `S` is a type that describes all possible states of the store
  * @template M
  * - `M` is a type that describes all possible mutations that can be applied
  *   to the store
  *
  * @param {M} mutation
  * - this is the state change that the Store wants to apply
- * @param {T} state
+ * @param {S} state
  * - this is the current state in the store
  *
  * @returns
  * - an {@link AppError} if this mutation causes a problem, or
  * - `null` otherwise
  */
-export type StoreGuard<T extends object,M extends AnyMutation>
+export type StoreGuard<S extends AnyState, M extends AnyMutation>
     = (
         mutation: M,
-        state: Readonly<T>,
+        state: Readonly<S>,
         options?: Partial<StoreOptions>,
     ) => void;

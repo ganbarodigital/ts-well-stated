@@ -34,17 +34,18 @@
 
 import { AppErrorOr } from "@safelytyped/core-types";
 import { AnyMutation } from "../Mutations";
+import { AnyState } from "../State";
 
 /**
  * `ObservableEvent` is a record of a change applied to a {@link Store}.
  *
- * @template T
- * - `T` is a type that describes all possible states of the store
+ * @template S
+ * - `S` is a type that describes all possible states of the store
  * @template M
  * - `M` is a type that describes all possible mutations that can be applied
  *   to the store
  */
-export interface ObservableEvent<T extends object, M extends AnyMutation> {
+export interface ObservableEvent<S extends AnyState, M extends AnyMutation> {
     /**
      * `mutation` is the data that has been passed to the store's list of
      * mutation handlers.
@@ -55,7 +56,7 @@ export interface ObservableEvent<T extends object, M extends AnyMutation> {
      * `initialState` is the state of the store BEFORE the mutation handlers
      * were called.
      */
-    initialState: T;
+    initialState: S;
 
     /**
      * `outcome` is a record of what happened when the mutation handlers
@@ -64,7 +65,7 @@ export interface ObservableEvent<T extends object, M extends AnyMutation> {
      * - the {@link AppError} that was thrown (if something went wrong), or
      * - the (possibly modified) state of the Store
      */
-    outcome: AppErrorOr<Readonly<T>>;
+    outcome: AppErrorOr<Readonly<S>>;
 
     /**
      * `created_at` tracks when this event was created
