@@ -56,10 +56,10 @@ export class MutationHandlers<
 >
 {
     /**
-     * `handlers` holds a list of functions that apply changes to a
+     * `extensions` holds a list of functions that apply changes to a
      * {@link Store}.
      */
-    public handlers: StoreExtensions<T,M,MutationHandler<T,M>>;
+    public extensions: StoreExtensions<T,M,MutationHandler<T,M>>;
 
     /**
      * `constructor()` creates a new {@link MutationHandlers} object.
@@ -69,7 +69,7 @@ export class MutationHandlers<
      */
     public constructor(handlers: HashMap<MutationHandler<T,M>[]> = {})
     {
-        this.handlers = new StoreExtensions(handlers);
+        this.extensions = new StoreExtensions(handlers);
     }
 
     /**
@@ -94,7 +94,7 @@ export class MutationHandlers<
         ...mutationNames: string[]
     ): ExtensionUnsubscriber
     {
-        return this.handlers.add(fn, ...mutationNames);
+        return this.extensions.add(fn, ...mutationNames);
     }
 
     /**
@@ -130,7 +130,7 @@ export class MutationHandlers<
         }: Partial<NotifyHandlersOptions> = {}
     )
     {
-        const handlerCalled = this.handlers.forEach(mutation, (handler) => {
+        const handlerCalled = this.extensions.forEach(mutation, (handler) => {
             handler(mutation, state, store, { onError });
         });
 

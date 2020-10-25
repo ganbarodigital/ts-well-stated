@@ -52,7 +52,11 @@ export class StoreSubscribers<
     M extends AnyMutation
 > {
 
-    public subscribers: StoreExtensions<T,M,StoreSubscriber<T,M>>;
+    /**
+     * `extensions` holds a list of functions that apply changes to a
+     * {@link Store}.
+     */
+    public extensions: StoreExtensions<T,M,StoreSubscriber<T,M>>;
 
     /**
      * `constructor()` builds a new `StoreSubscribers` object.
@@ -63,7 +67,7 @@ export class StoreSubscribers<
      */
     public constructor(subscribers: HashMap<StoreSubscriber<T,M>[]> = {})
     {
-        this.subscribers = new StoreExtensions(subscribers);
+        this.extensions = new StoreExtensions(subscribers);
     }
 
     /**
@@ -92,7 +96,7 @@ export class StoreSubscribers<
         ...mutationNames: string[]
     ): ExtensionUnsubscriber
     {
-        return this.subscribers.add(fn, ...mutationNames);
+        return this.extensions.add(fn, ...mutationNames);
     }
 
     /**
@@ -121,7 +125,7 @@ export class StoreSubscribers<
         }: Partial<StoreOptions> = {}
     ): void
     {
-        this.subscribers.forEach(mutation, (callbackFn) => {
+        this.extensions.forEach(mutation, (callbackFn) => {
             callbackFn(mutation, state, store, { onError });
         });
     }

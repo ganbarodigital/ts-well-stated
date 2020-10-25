@@ -52,7 +52,11 @@ export class StoreGuards<
     M extends AnyMutation
 > {
 
-    public guards: StoreExtensions<T,M,StoreGuard<T,M>>;
+    /**
+     * `extensions` holds a list of functions that apply changes to a
+     * {@link Store}.
+     */
+    public extensions: StoreExtensions<T,M,StoreGuard<T,M>>;
 
     /**
      * `constructor()` builds a new `StoreGuard` object.
@@ -63,7 +67,7 @@ export class StoreGuards<
      */
     public constructor(guards: HashMap<StoreGuard<T,M>[]> = {})
     {
-        this.guards = new StoreExtensions(guards);
+        this.extensions = new StoreExtensions(guards);
     }
 
     /**
@@ -92,7 +96,7 @@ export class StoreGuards<
         ...mutationNames: string[]
     ): ExtensionUnsubscriber
     {
-        return this.guards.add(fn, ...mutationNames);
+        return this.extensions.add(fn, ...mutationNames);
     }
 
     /**
@@ -118,7 +122,7 @@ export class StoreGuards<
         }: Partial<StoreOptions> = {}
     ): void
     {
-        this.guards.forEach(mutation, (callbackFn) => {
+        this.extensions.forEach(mutation, (callbackFn) => {
             callbackFn(mutation, state, { onError });
         });
     }

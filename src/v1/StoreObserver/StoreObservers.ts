@@ -62,7 +62,7 @@ export class StoreObservers<
      * is interested in. An observer may be registered against multiple
      * mutation class names.
      */
-    public observers: StoreExtensions<T,M,StoreObserver<T,M>>;
+    public extensions: StoreExtensions<T,M,StoreObserver<T,M>>;
 
     /**
      * `constructor()` creates a new `StoreObservers` object.
@@ -73,7 +73,7 @@ export class StoreObservers<
      */
     public constructor(observers: HashMap<StoreObserver<T,M>[]> = {})
     {
-        this.observers = new StoreExtensions(observers);
+        this.extensions = new StoreExtensions(observers);
     }
 
     /**
@@ -100,7 +100,7 @@ export class StoreObservers<
         ...mutationNames: string[]
     ): ExtensionUnsubscriber
     {
-        return this.observers.add(observer, ...mutationNames);
+        return this.extensions.add(observer, ...mutationNames);
     }
 
     /**
@@ -141,7 +141,7 @@ export class StoreObservers<
         // what the outcome us
         const updaterFns: OutcomeUpdater<T>[] = [];
 
-        this.observers.forEach(mutation, (observer) => {
+        this.extensions.forEach(mutation, (observer) => {
             updaterFns.push(observer.beforeMutationApplied(storeEvent))
         });
 
