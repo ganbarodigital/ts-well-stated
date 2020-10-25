@@ -116,6 +116,11 @@ export class InterestsRegistry<E>
         topicName: string,
         interest: E
     ): InterestUnsubscriber {
+        // make sure we have somewhere to add it to
+        if (!this._theList[topicName]) {
+            this._theList[topicName] = [];
+        }
+
         // add it to the list
         this._theList[topicName].push(interest);
 
