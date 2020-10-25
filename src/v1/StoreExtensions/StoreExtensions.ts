@@ -182,4 +182,21 @@ export class StoreExtensions<
         // all done
         return extensionCalled;
     }
+
+    /**
+     * `.length` tells you how many extensions are currently registered.
+     *
+     * If (for example) the same extension is listening for two mutations, it
+     * gets counted twice.
+     */
+    public get length(): number {
+        let retval = 0;
+
+        HashMap.forEach(this._extensions, (extensions) => {
+            retval = retval + extensions.length;
+        });
+
+        // all done
+        return retval;
+    }
 }
