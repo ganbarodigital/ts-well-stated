@@ -31,14 +31,14 @@
 // ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 //
-import { AppError, AppErrorOr, HashMap } from "@safelytyped/core-types";
+import { AppError, AppErrorOr, getClassNames, HashMap } from "@safelytyped/core-types";
 import { copy } from "copy-anything";
 import { DateTime } from "luxon";
 
 import { ObservableEvent } from ".";
 import { AnyMutation } from "../Mutations";
 import { AnyState } from "../State";
-import { ExtensionUnsubscriber, StoreExtensions } from "../StoreExtensions";
+import { InterestUnsubscriber, InterestsRegistry } from "../Interests";
 import { OutcomeUpdater } from "./OutcomeUpdater";
 import { StoreObserver } from "./StoreObserver";
 
@@ -63,7 +63,7 @@ export class StoreObservers<
      * is interested in. An observer may be registered against multiple
      * mutation class names.
      */
-    public extensions: StoreExtensions<S,M,StoreObserver<S,M>>;
+    public extensions: InterestsRegistry<StoreObserver<S,M>>;
 
     /**
      * `constructor()` creates a new `StoreObservers` object.
@@ -74,7 +74,7 @@ export class StoreObservers<
      */
     public constructor(observers: HashMap<StoreObserver<S,M>[]> = {})
     {
-        this.extensions = new StoreExtensions(observers);
+        this.extensions = new InterestsRegistry(observers);
     }
 
     /**
@@ -99,7 +99,7 @@ export class StoreObservers<
     public registerObserver(
         observer: StoreObserver<S,M>,
         ...mutationNames: string[]
-    ): ExtensionUnsubscriber
+    ): InterestUnsubscriber
     {
         return this.extensions.add(observer, ...mutationNames);
     }
@@ -142,9 +142,9 @@ export class StoreObservers<
         // what the outcome us
         const updaterFns: OutcomeUpdater<S>[] = [];
 
-        this.extensions.forEach(mutation, (observer) => {
+        this.extensions.forEach((observer) => {
             updaterFns.push(observer.beforeMutationApplied(storeEvent))
-        });
+        }, ...getClassNames(mutation));
 
         return (outcome: AppErrorOr<S>, completedAt: Date) => {
             // optimisation

@@ -31,14 +31,14 @@
 // ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 //
-import { HashMap, THROW_THE_ERROR } from "@safelytyped/core-types";
+import { getClassNames, HashMap, THROW_THE_ERROR } from "@safelytyped/core-types";
 
 import { AnyMutation } from ".";
 import { UnhandledMutationError } from "../Errors";
 import { AnyState } from "../State";
 import { Store } from "../Store";
 import { NotifyHandlersOptions } from "../Store/NotifyHandlersOptions";
-import { StoreExtensions, ExtensionUnsubscriber } from "../StoreExtensions";
+import { InterestsRegistry, InterestUnsubscriber } from "../Interests";
 import { MutationHandler } from "./MutationHandler";
 
 /**
@@ -60,7 +60,7 @@ export class MutationHandlers<
      * `extensions` holds a list of functions that apply changes to a
      * {@link Store}.
      */
-    public extensions: StoreExtensions<S,M,MutationHandler<S,M>>;
+    public extensions: InterestsRegistry<MutationHandler<S,M>>;
 
     /**
      * `constructor()` creates a new {@link MutationHandlers} object.
@@ -70,7 +70,7 @@ export class MutationHandlers<
      */
     public constructor(handlers: HashMap<MutationHandler<S,M>[]> = {})
     {
-        this.extensions = new StoreExtensions(handlers);
+        this.extensions = new InterestsRegistry(handlers);
     }
 
     /**
@@ -93,7 +93,7 @@ export class MutationHandlers<
     public registerHandler(
         fn: MutationHandler<S,M>,
         ...mutationNames: string[]
-    ): ExtensionUnsubscriber
+    ): InterestUnsubscriber
     {
         return this.extensions.add(fn, ...mutationNames);
     }
@@ -131,9 +131,9 @@ export class MutationHandlers<
         }: Partial<NotifyHandlersOptions> = {}
     )
     {
-        const handlerCalled = this.extensions.forEach(mutation, (handler) => {
+        const handlerCalled = this.extensions.forEach((handler) => {
             handler(mutation, state, store, { onError });
-        });
+        }, ...getClassNames(mutation));
 
         if (!handlerCalled) {
             onUnhandledMutation(new UnhandledMutationError({logsOnly: {mutation}}));

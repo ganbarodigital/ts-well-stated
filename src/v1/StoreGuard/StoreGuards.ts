@@ -31,12 +31,12 @@
 // ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 //
-import { HashMap, THROW_THE_ERROR } from "@safelytyped/core-types";
+import { getClassNames, HashMap, THROW_THE_ERROR } from "@safelytyped/core-types";
 
+import { InterestsRegistry, InterestUnsubscriber } from "../Interests";
 import { AnyMutation } from "../Mutations";
 import { AnyState } from "../State";
 import { StoreOptions } from "../Store";
-import { ExtensionUnsubscriber, StoreExtensions } from "../StoreExtensions";
 import { StoreGuard } from "./StoreGuard";
 
 /**
@@ -57,7 +57,7 @@ export class StoreGuards<
      * `extensions` holds a list of functions that apply changes to a
      * {@link Store}.
      */
-    public extensions: StoreExtensions<S,M,StoreGuard<S,M>>;
+    public extensions: InterestsRegistry<StoreGuard<S,M>>;
 
     /**
      * `constructor()` builds a new `StoreGuard` object.
@@ -68,7 +68,7 @@ export class StoreGuards<
      */
     public constructor(guards: HashMap<StoreGuard<S,M>[]> = {})
     {
-        this.extensions = new StoreExtensions(guards);
+        this.extensions = new InterestsRegistry(guards);
     }
 
     /**
@@ -95,7 +95,7 @@ export class StoreGuards<
     public registerGuard(
         fn: StoreGuard<S,M>,
         ...mutationNames: string[]
-    ): ExtensionUnsubscriber
+    ): InterestUnsubscriber
     {
         return this.extensions.add(fn, ...mutationNames);
     }
@@ -123,8 +123,8 @@ export class StoreGuards<
         }: Partial<StoreOptions> = {}
     ): void
     {
-        this.extensions.forEach(mutation, (callbackFn) => {
-            callbackFn(mutation, state, { onError });
-        });
+        this.extensions.forEach((guard) => {
+            guard(mutation, state, { onError });
+        }, ...getClassNames(mutation));
     }
 }

@@ -32,5 +32,8 @@
 // POSSIBILITY OF SUCH DAMAGE.
 //
 
-export * from "./ExtensionUnsubscriber";
-export * from "./StoreExtensions";
+/**
+ * `InterestUnsubscriber` is any function that knows how to unsubscribe
+ * a callback from the {@link CallbacksManager}.
+ */
+export type InterestUnsubscriber = () => void;

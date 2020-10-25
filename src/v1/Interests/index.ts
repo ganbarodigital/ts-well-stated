@@ -32,8 +32,5 @@
 // POSSIBILITY OF SUCH DAMAGE.
 //
 
-/**
- * `ExtensionUnsubscriber` is any function that knows how to unsubscribe
- * an extension from the {@link StoreExtensions} manager.
- */
-export type ExtensionUnsubscriber = () => void;
+export * from "./InterestUnsubscriber";
+export * from "./InterestsRegistry";

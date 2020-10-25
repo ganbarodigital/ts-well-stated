@@ -31,12 +31,12 @@
 // ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 //
-import { HashMap, THROW_THE_ERROR } from "@safelytyped/core-types";
+import { getClassNames, HashMap, THROW_THE_ERROR } from "@safelytyped/core-types";
 
 import { AnyMutation } from "../Mutations";
 import { AnyState } from "../State";
 import { Store, StoreOptions } from "../Store";
-import { StoreExtensions, ExtensionUnsubscriber } from "../StoreExtensions";
+import { InterestsRegistry, InterestUnsubscriber } from "../Interests";
 import { StoreSubscriber } from "./StoreSubscriber";
 
 /**
@@ -57,7 +57,7 @@ export class StoreSubscribers<
      * `extensions` holds a list of functions that apply changes to a
      * {@link Store}.
      */
-    public extensions: StoreExtensions<S,M,StoreSubscriber<S,M>>;
+    public extensions: InterestsRegistry<StoreSubscriber<S,M>>;
 
     /**
      * `constructor()` builds a new `StoreSubscribers` object.
@@ -68,7 +68,7 @@ export class StoreSubscribers<
      */
     public constructor(subscribers: HashMap<StoreSubscriber<S,M>[]> = {})
     {
-        this.extensions = new StoreExtensions(subscribers);
+        this.extensions = new InterestsRegistry(subscribers);
     }
 
     /**
@@ -95,7 +95,7 @@ export class StoreSubscribers<
     public registerSubscriber(
         fn: StoreSubscriber<S,M>,
         ...mutationNames: string[]
-    ): ExtensionUnsubscriber
+    ): InterestUnsubscriber
     {
         return this.extensions.add(fn, ...mutationNames);
     }
@@ -126,8 +126,8 @@ export class StoreSubscribers<
         }: Partial<StoreOptions> = {}
     ): void
     {
-        this.extensions.forEach(mutation, (callbackFn) => {
-            callbackFn(mutation, state, store, { onError });
-        });
+        this.extensions.forEach((subscriber) => {
+            subscriber(mutation, state, store, { onError });
+        }, ...getClassNames(mutation));
     }
 }
