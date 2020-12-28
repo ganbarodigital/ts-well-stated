@@ -32,10 +32,11 @@
 // POSSIBILITY OF SUCH DAMAGE.
 //
 import { AppErrorOr } from "@safelytyped/core-types";
+import { DateTime } from "luxon";
 
 import { AnyMutation } from "../Mutations";
 import { AnyState } from "../State";
-import { ObservableEvent } from "../StoreObserver";
+import { ObservableEvent, StoreObserver } from "../StoreObserver";
 import { Changelog } from "./Changelog";
 import { ChangelogEntry } from "./ChangelogEntry";
 
@@ -45,13 +46,13 @@ import { ChangelogEntry } from "./ChangelogEntry";
  *
  * Use it for unit testing and debugging purposes.
  */
-export class InMemoryChangelog<S extends AnyState, M extends AnyMutation>
-implements Changelog<S, M>
+export class InMemoryChangelog<ST extends AnyState, M extends AnyMutation>
+implements Changelog<ST, M>, StoreObserver<ST,M>
 {
     /**
      * `_theLog` holds our list of observered changes.
      */
-    protected _theLog: ChangelogEntry<S, M>[] = [];
+    protected _theLog: ChangelogEntry<ST, M>[] = [];
 
     /**
      * `beforeMutationApplied()` is called by a {@link Store} to tell us
@@ -60,12 +61,21 @@ implements Changelog<S, M>
      * @param event
      * details about the mutation that is about to be applied
      */
-    public beforeMutationApplied(event: ObservableEvent<S, M>) {
+    public beforeMutationApplied(
+        mutation: M,
+        initialState: ST
+    ) {
+        const event: ObservableEvent<ST,M> = {
+            mutation,
+            initialState,
+            outcome: initialState,
+            createdAt: DateTime.utc().toJSDate()
+        }
         this._theLog.push(event);
 
-        return (outcome: AppErrorOr<S>, completedAt: Date) => {
+        return (outcome: AppErrorOr<ST>) => {
             event.outcome = outcome;
-            event.completedAt = completedAt;
+            event.completedAt = DateTime.utc().toJSDate();
         }
     }
 

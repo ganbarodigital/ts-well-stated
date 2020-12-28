@@ -16,36 +16,30 @@
 // License along with this program. If not, see
 // <https://www.gnu.org/licenses/>.
 //
-
 import { AnyMutation } from "../Mutations";
-import { AnyState } from "../State";
 import { StoreOptions } from "../Store";
 
+
 /**
- * `StoreGuard<S,M>` is a function type. It describes functions
+ * `StoreGuarantee<ST,M>` is a function type. It describes functions
  * that get notified before a mutation is applied to the store.
  *
- * Each `StoreGuard` can:
+ * Each `StoreGuarantee` can:
  * - reject: it can throw Errors to reject the mutation
  *
- * @template S
+ * @template ST
  * - `S` is a type that describes all possible states of the store
  * @template M
- * - `M` is a type that describes all possible mutations that can be applied
- *   to the store
+ * - `M` is a list of the mutations that the store supports
  *
+ * @param {ST} state
+ * - this is a copy of the current state in the store. Treat it as readonly.
  * @param {M} mutation
  * - this is the state change that the Store wants to apply
- * @param {S} state
- * - this is the current state in the store
- *
- * @returns
- * - an {@link AppError} if this mutation causes a problem, or
- * - `null` otherwise
  */
-export type StoreGuard<S extends AnyState, M extends AnyMutation>
+export type StoreGuarantee<ST, M extends AnyMutation>
     = (
         mutation: M,
-        state: Readonly<S>,
-        options?: Partial<StoreOptions>,
+        state: ST,
+        options: StoreOptions,
     ) => void;

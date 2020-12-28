@@ -31,75 +31,33 @@
 // ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 //
-import { getClassNames, HashMap, THROW_THE_ERROR } from "@safelytyped/core-types";
+import { THROW_THE_ERROR } from "@safelytyped/core-types";
+import { WatchList } from "@safelytyped/well-watched";
 
 import { AnyMutation } from ".";
 import { UnhandledMutationError } from "../Errors";
-import { AnyState } from "../State";
-import { Store } from "../Store";
-import { NotifyHandlersOptions } from "../Store/NotifyHandlersOptions";
-import { InterestsRegistry, InterestUnsubscriber } from "../Interests";
+import { Store, StoreOptions, StoreWatchListOptions } from "../Store";
+import { MutationHandlersOptions } from "./MutationHandlersOptions";
+import { getTopicsFromMutation } from "./getTopicsFromMutation";
 import { MutationHandler } from "./MutationHandler";
 
 /**
  * `MutationHandlers` manages a list of functions that apply changes
  * (known as mutations) to a {@link Store}.
  *
- * @template S
+ * @template ST
  * - `S` is a type that describes all possible states of the store
  * @template M
  * - `M` is a type that describes all possible mutations that can be applied
  *   to the store
  */
 export class MutationHandlers<
-    S extends AnyState,
+    ST,
     M extends AnyMutation
->
+> extends WatchList<MutationHandler<ST,M>>
 {
     /**
-     * `extensions` holds a list of functions that apply changes to a
-     * {@link Store}.
-     */
-    public extensions: InterestsRegistry<MutationHandler<S,M>>;
-
-    /**
-     * `constructor()` creates a new {@link MutationHandlers} object.
-     *
-     * @param handlers
-     * the initial list of functions to start with
-     */
-    public constructor(handlers: HashMap<MutationHandler<S,M>[]> = {})
-    {
-        this.extensions = new InterestsRegistry(handlers);
-    }
-
-    /**
-     * `registerHandler()` adds your callback to our subscriber lists.
-     * We will call your callback whenever these mutations have been applied
-     * to this store.
-     *
-     * We send back a function that you can call if you ever need to
-     * unsubscribe your handler.
-     *
-     * @param fn
-     * we will call this function after `mutation` has been applied to
-     * the store
-     * @param mutationNames
-     * the class name of the mutation(s) that you want to subscribe to.
-     * Use `Object` to register for all mutations.
-     * @returns
-     * call this function if you ever need to unsubscribe your handler
-     */
-    public registerHandler(
-        fn: MutationHandler<S,M>,
-        ...mutationNames: string[]
-    ): InterestUnsubscriber
-    {
-        return this.extensions.add(fn, ...mutationNames);
-    }
-
-    /**
-     * `forEach()` is called by a {@link Store} whenever it has been
+     * `apply()` is called by a {@link Store} whenever it has been
      * given a mutation to apply.
      *
      * We pass the `mutation` to all of the registered mutation handlers.
@@ -110,34 +68,44 @@ export class MutationHandlers<
      * @param state
      * the data structure that each handler needs to update
      * @param store
-     * the {@link Store} that called us. The handlers can use this to apply
+     * The {@link Store} that called us. The handlers can use this to apply
      * additional mutations if required.
      * @param onError
      * - each handler should call your `onError` handler if a problem
      *   occurs
+     * @param topics
+     * A list of topics to find handlers for.
      * @param onUnhandledMutation
      * - we will call your `onUnhandledMutation` handler if we can't find
      *   any registered handlers for the mutation. Your handler can throw
      *   an Error, or it can simply return
      */
-    public forEach
+    public static apply<ST, M extends AnyMutation>
     (
+        mutations: MutationHandlers<ST,M>,
         mutation: M,
-        state: S,
-        store: Store<S,M>,
+        state: ST,
+        store: Store<ST,M>,
         {
             onUnhandledMutation = THROW_THE_ERROR,
-            onError = THROW_THE_ERROR
-        }: Partial<NotifyHandlersOptions> = {}
+            onError = THROW_THE_ERROR,
+            topics = getTopicsFromMutation(mutation),
+        }: Partial<MutationHandlersOptions & StoreOptions & StoreWatchListOptions> = {},
     )
     {
+        // we use this to avoid silent failures!
         let handlerCalled = false;
 
-        this.extensions.forEach((handler) => {
-            handlerCalled = true;
-            handler(mutation, state, store, { onError });
-        }, ...getClassNames(mutation));
+        // find and call the relevent mutation handlers
+        mutations.forEach(
+            (handler) => {
+                handlerCalled = true;
+                handler(mutation, state, store, { onError });
+            },
+            ...topics
+        );
 
+        // did we find at least ONE relevant mutation handler?
         if (!handlerCalled) {
             onUnhandledMutation(new UnhandledMutationError({logsOnly: {mutation}}));
         }

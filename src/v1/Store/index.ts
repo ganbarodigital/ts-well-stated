@@ -33,5 +33,5 @@
 //
 
 export * from "./StoreOptions";
-export * from "./NotifyHandlersOptions";
+export * from "./StoreWatchListOptions";
 export * from "./Store";

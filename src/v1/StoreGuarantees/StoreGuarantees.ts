@@ -35,12 +35,12 @@ import { THROW_THE_ERROR } from "@safelytyped/core-types";
 import { WatchList } from "@safelytyped/well-watched";
 
 import { AnyMutation, getTopicsFromMutation } from "../Mutations";
-import { Store, StoreOptions } from "../Store";
+import { StoreOptions } from "../Store/StoreOptions";
 import { StoreWatchListOptions } from "../Store/StoreWatchListOptions";
-import { StoreSubscriber } from "./StoreSubscriber";
+import { StoreGuarantee } from "./StoreGuarantee";
 
 /**
- * `StoreSubscribers` manages a list of {@link StoreSubscriber}s.
+ * `StoreGuarantees` manages a list of {@link StoreGuarantee}s.
  *
  * @template ST
  * - `S` is a type that describes all possible states of the store
@@ -48,44 +48,44 @@ import { StoreSubscriber } from "./StoreSubscriber";
  * - `M` is a type that describes all possible mutations that can be applied
  *   to the store
  */
-export class StoreSubscribers<
+export class StoreGuarantees<
     ST,
     M extends AnyMutation
-> extends WatchList<StoreSubscriber<ST,M>>
+> extends WatchList<StoreGuarantee<ST,M>>
 {
     /**
-     * `notify()` triggers a call to every subscriber that has
-     * registered for `mutation`.
+     * `apply()` triggers a call to every guard that has registered for
+     * `mutation`.
      *
-     * @param subscribers
-     * The collection of subscribers that we will search, to find subscribers
-     * that have registered to be told about `mutation`.
+     * Internally, we use {@link getTopicsFromMutation} to work out which
+     * guards to call.
+     *
+     * @param guarantees
+     * The collection of guarantees that we will search for guarantees
+     * that are registered to be told about `mutation`.
      * @param mutation
-     * The mutation that has been applied.
+     * The mutation that the {@link Store} has been asked to apply.
      * @param state
-     * The state of the store, after the mutation has been applied.
-     * @param store
-     * The store itself, in case you want to apply more mutations.
+     * The state of the store, before the mutation has been applied.
      * @param onError
      * Call this if an error occurs, and throw its return value.
      * @param topics
-     * A list of topics to find handlers for.
+     * A list of topics to find guarantees for.
      */
-    public static notify<ST, M extends AnyMutation>
+    public static apply<ST, M extends AnyMutation>
     (
-        subscribers: StoreSubscribers<ST,M>,
+        guarantees: StoreGuarantees<ST,M>,
         mutation: M,
         state: ST,
-        store: Store<ST, M>,
         {
             onError = THROW_THE_ERROR,
-            topics = getTopicsFromMutation(mutation)
+            topics = getTopicsFromMutation(mutation),
         }: Partial<StoreWatchListOptions & StoreOptions> = {}
     ): void
     {
-        subscribers.forEach(
-            (subscriber) => {
-                subscriber(mutation, state, store, { onError });
+        guarantees.forEach(
+            (guarantee) => {
+                guarantee(mutation, state, { onError });
             },
             ...topics
         );

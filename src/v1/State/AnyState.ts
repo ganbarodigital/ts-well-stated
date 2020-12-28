@@ -36,4 +36,4 @@
  * `AnyState` represents all possible states that a {@link Store} can be
  * defined with.
  */
-export type AnyState = object;
+export type AnyState = any;

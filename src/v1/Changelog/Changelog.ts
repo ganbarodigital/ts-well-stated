@@ -40,12 +40,12 @@ import { ObservableEvent, StoreObserver } from "../StoreObserver";
  * `Changelog` is a {@link StoreObserver}. Use it to inspect what has
  * happened inside your {@link Store}.
  */
-export interface Changelog<S extends AnyState, M extends AnyMutation>
-extends StoreObserver<S,M>
+export interface Changelog<ST extends AnyState, M extends AnyMutation>
+extends StoreObserver<ST,M>
 {
     truncate(): void;
 
     toJson(): string;
 
-    log: ObservableEvent<S,M>[];
+    log: ObservableEvent<ST,M>[];
 }

@@ -42,8 +42,8 @@ import { AnyState } from "../State";
  * This function GUARANTEES that observers will be given a read-only
  * copy of the store's state, if the outcome is not an {@link AppError}.
  *
- * @template S
- * - `S` is a type that describes all possible states of the store
+ * @template ST
+ * - `ST` is a type that describes all possible states of the {@link Store}
  */
-export type OutcomeUpdater<S extends AnyState>
-    = (outcome: AppErrorOr<S>, completedAt: Date) => void;
+export type OutcomeUpdater<ST extends AnyState>
+    = (outcome: AppErrorOr<ST>) => void;

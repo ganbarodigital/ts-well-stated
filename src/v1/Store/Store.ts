@@ -31,16 +31,14 @@
 // ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 //
-import { THROW_THE_ERROR } from "@safelytyped/core-types";
+import { DeepImmutable, THROW_THE_ERROR } from "@safelytyped/core-types";
 import { copy } from "copy-anything";
-import { DateTime } from "luxon";
 
-import { AnyMutation, MutationHandlers } from "../Mutations";
-import { AnyState } from "../State";
-import { StoreGuards } from "../StoreGuard";
+import { AnyMutation, getTopicsFromMutation, MutationHandlers, MutationHandlersOptions } from "../Mutations";
+import { StoreGuarantees } from "../StoreGuarantees";
 import { StoreObservers } from "../StoreObserver";
 import { StoreSubscribers } from "../StoreSubscriber";
-import { NotifyHandlersOptions } from "./NotifyHandlersOptions";
+import { StoreOptions } from "./StoreOptions";
 
 /**
  * `Store` is a type-safe, Flux-like state store. Well, it's probably more
@@ -49,6 +47,7 @@ import { NotifyHandlersOptions } from "./NotifyHandlersOptions";
  * Use it to hold the main state of your application or a component. Other
  * code can register (and de-register!) their own:
  *
+ * - guards (functions that validate updates to the store before they happen)
  * - handlers (functions that update the store)
  * - subscribers (functions that react to changes to the store)
  * - observers (passive subscribers)
@@ -59,14 +58,14 @@ import { NotifyHandlersOptions } from "./NotifyHandlersOptions";
  * correctness over performance. In particular, we do make deep copies
  * (plural!) of the Store's internal state whenever you apply a mutation.
  *
- * @template S
- * - `S` is a type that describes all possible states of the store
+ * @template ST
+ * - `ST` is a type that describes all possible states of the store
  * @template M
  * - `M` is a type that describes all possible mutations that can be applied
- *   to the store
+ *   to the store. Use `AnyMutation` if the Store is left open to extension.
  */
 export class Store<
-    S extends AnyState,
+    ST,
     M extends AnyMutation
 >
 {
@@ -75,14 +74,14 @@ export class Store<
      *
      * @protected
      */
-    protected _state: S;
+    protected _state: ST;
 
     /**
-     * `guards` managers the functions that are responsible for validating
+     * `guarantees` managers the functions that are responsible for validating
      * mutations before they are applied to the Store. The store calls
      * these functions whenever you pass a mutation into {@link apply}().
      */
-    public guards: StoreGuards<S,M>;
+    public guarantees: StoreGuarantees<ST,M>;
 
     /**
      * `handlers` holds a list of functions that are responsible for
@@ -91,7 +90,7 @@ export class Store<
      *
      * Handlers can throw exceptions to reject a change to the store.
      */
-    public handlers: MutationHandlers<S,M>;
+    public handlers: MutationHandlers<ST,M>;
 
     /**
      * `subscribers` manages a list of functions that want to be notified
@@ -102,7 +101,7 @@ export class Store<
      * and they can reject (they can throw exceptions to reject changes
      * to the store).
      */
-    public subscribers: StoreSubscribers<S,M>;
+    public subscribers: StoreSubscribers<ST,M>;
 
     /**
      * `observers` holds a list of objects that want to be notified
@@ -112,57 +111,48 @@ export class Store<
      * They're intended to be passive subscribers, perhaps for debugging
      * or testing purposes.
      */
-    public observers: StoreObservers<S,M>;
+    public observers: StoreObservers<ST,M>;
 
     /**
-     * `constructor` creates a new Store.
+     * `constructor()` creates a new Store.
      *
      * @param initialState
      * The initial value that the Store will start with. We will take a
      * deep clone of this, to prevent side-effects.
-     * @param guards
-     * The initial list of guards that will validate mutations before they
-     * are applied.
-     * @param handlers
-     * The initial list of functions that will apply mutations to the Store's
-     * internal state.
-     * @param observers
-     * The initial list of functions that will be notified when we attempt
-     * to apply mutations to the Store's internal state.
-     * @param subscribers
-     * The initial list of functions that will be notified after we have
-     * applied a mutation to the Store's initial state.
      */
     public constructor(
-        initialState: S,
-        {
-            guards = new StoreGuards(),
-            handlers = new MutationHandlers(),
-            observers = new StoreObservers(),
-            subscribers = new StoreSubscribers(),
-        }: Partial<{
-            guards: StoreGuards<S,M>,
-            handlers: MutationHandlers<S,M>,
-            observers: StoreObservers<S,M>,
-            subscribers: StoreSubscribers<S,M>,
-        }> = {}
+        initialState: ST,
     )
     {
         // for safety's sake, we deep-clone the initial state
         this._state = copy(initialState);
 
-        // keep track of all of our helpers
-        this.guards = guards;
-        this.handlers = handlers;
-        this.observers = observers;
-        this.subscribers = subscribers;
+        // we start with empty everything else
+        this.guarantees = new StoreGuarantees();
+        this.handlers = new MutationHandlers();
+        this.subscribers = new StoreSubscribers();
+        this.observers = new StoreObservers();
     }
 
     /**
      * `apply()` is how we change the state in the store.
      *
+     * We pass the `mutation` to:
+     *
+     * - observers
+     * - guarantees
+     * - mutation handlers
+     * - subscribers
+     * - observer callbacks
+     *
+     * in that order.
+     *
      * We pass the `mutation` to all of the registered mutation handlers.
      * They are called in the order that they were registered.
+     *
+     * Before we do that, we call all registered guarantees, in case there's
+     * a problem with the `mutation` that needs to be caught before the
+     * Store is updated.
      *
      * We also call all registered observers and subscribers along the way.
      *
@@ -187,43 +177,61 @@ export class Store<
         {
             onUnhandledMutation = THROW_THE_ERROR,
             onError = THROW_THE_ERROR
-        }: Partial<NotifyHandlersOptions> = {}
-    ) {
+        }: Partial<MutationHandlersOptions & StoreOptions> = {}
+    ): void {
         // take a backup, in case an error occurs
+        //
+        // we can only avoid this clone operation if the underlying
+        // Javascript world adds full immutability support
         const initialState = copy(this._state);
+
+        // generate a list of topics that we'll want to work with
+        const topics = getTopicsFromMutation(mutation);
 
         // tell our observers that we're beginning a change
         //
         // we will update them once we know what the outcome is
-        const updateOutcome = this.observers.forEach(
+        const updateOutcome = StoreObservers.prepare(
+            this.observers,
             mutation,
             initialState,
+            { topics }
         );
 
         // if anything goes wrong, the guards / handlers / subscribers
         // will throw an Error to tell us about it
         try {
             // check with the guards first!
-            this.guards.forEach(mutation, this._state, { onError });
+            StoreGuarantees.apply(
+                this.guarantees,
+                mutation,
+                initialState,
+                { onError, topics }
+            );
 
             // tell the handlers to update our live state
-            this.handlers.forEach(
+            MutationHandlers.apply(
+                this.handlers,
                 mutation,
                 this._state,
                 this,
                 {
                     onUnhandledMutation,
-                    onError
+                    onError,
+                    topics
                 }
             );
 
             // tell everyone who cares that a mutation has been
             // successfully applied
-            this.subscribers.forEach(
+            //
+            // subscribers are free to trigger more change
+            StoreSubscribers.notify(
+                this.subscribers,
                 mutation,
                 this._state,
                 this,
-                { onError }
+                { onError, topics }
             );
         }
         catch (e) {
@@ -232,7 +240,7 @@ export class Store<
             this._state = initialState;
 
             // tell the observers that something went very wrong
-            updateOutcome(e, DateTime.local().toJSDate());
+            updateOutcome(e);
 
             // continue to unwind the stack
             throw e;
@@ -242,19 +250,25 @@ export class Store<
 
         // tell the observers about our new state
         //
-        // we don't need to pass a deep-copy here. `updateOutcome()` will
-        // make one if needed.
-        updateOutcome(this._state, DateTime.local().toJSDate());
+        // we pass a copy along here, to make sure the observers
+        // cannot cause side-effects at all
+        const newState = copy(this._state);
+        updateOutcome(newState);
     }
 
     /**
      * `.state` gives you read-only access to the current state of this
      * store.
      *
+     * NOTE: do not keep long-lived references to anything within the
+     * returned state. These references will not remain valid over time,
+     * and you'll have an absolute devil of a job tracking down the bugs
+     * that'll result.
+     *
      * NOTE: we do not return a clone of the state (for performance reasons).
-     * Don't abuse this!
+     * Don't abuse this, or a future version *will* return a clone!
      */
-    public get state(): Readonly<S> {
-        return this._state;
+    public get state(): DeepImmutable<ST> {
+        return this._state as DeepImmutable<ST>;
     }
 }

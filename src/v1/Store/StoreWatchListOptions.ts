@@ -32,5 +32,12 @@
 // POSSIBILITY OF SUCH DAMAGE.
 //
 
-export * from "./InterestUnsubscriber";
-export * from "./InterestsRegistry";
+import { NonEmptyArray } from "@safelytyped/core-types";
+
+/**
+ * `StoreWatchListOptions` is the list of options normally accepted by
+ * the Store's stock watchlists.
+ */
+export interface StoreWatchListOptions {
+    topics: NonEmptyArray<string>;
+}

@@ -31,81 +31,29 @@
 // ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 //
-import { AppError, AppErrorOr, getClassNames, HashMap } from "@safelytyped/core-types";
-import { copy } from "copy-anything";
-import { DateTime } from "luxon";
+import { AppErrorOr, NonEmptyArray } from "@safelytyped/core-types";
+import { WatchList } from "@safelytyped/well-watched";
 
-import { ObservableEvent } from ".";
-import { AnyMutation } from "../Mutations";
-import { AnyState } from "../State";
-import { InterestUnsubscriber, InterestsRegistry } from "../Interests";
+import { AnyMutation, getTopicsFromMutation } from "../Mutations";
 import { OutcomeUpdater } from "./OutcomeUpdater";
 import { StoreObserver } from "./StoreObserver";
 
 /**
  * `StoreObservers` manages a list of {@link StoreObserver} objects.
  *
- * @template S
+ * @template ST
  * - `S` is a type that describes all possible states of the store
  * @template M
  * - `M` is a type that describes all possible mutations that can be applied
  *   to the store
  */
 export class StoreObservers<
-    S extends AnyState,
+    ST,
     M extends AnyMutation
->
+> extends WatchList<StoreObserver<ST,M>>
 {
     /**
-     * `observers` holds a list of {@link StoreObserver} objects.
-     *
-     * The index is the class name of the mutation that each observer
-     * is interested in. An observer may be registered against multiple
-     * mutation class names.
-     */
-    public extensions: InterestsRegistry<StoreObserver<S,M>>;
-
-    /**
-     * `constructor()` creates a new `StoreObservers` object.
-     *
-     * @param observers
-     * the initial list of {@link StoreObserver} objects that we should
-     * call whenever {@link notifyObservers} is called.
-     */
-    public constructor(observers: HashMap<StoreObserver<S,M>[]> = {})
-    {
-        this.extensions = new InterestsRegistry(observers);
-    }
-
-    /**
-     * `registerObserver()` adds your observer to our observer lists.
-     * We will notify your observer whenever the store is being updated.
-     *
-     * We send back a function that you can call if you never need to
-     * unsubscribe your `fn` {@link StoreObserverSubscriber}.
-     *
-     * NOTE:
-     * - you can call the unsubscribe function at any time
-     * - if you call it from inside any {@link StoreObserverSubscriber}, it
-     *   won't take effect until the store has finished applying the mutation.
-     *
-     * @param observer
-     * we will call this observer just before the mutation is applied.
-     * @param mutationNames
-     * the class name of the mutation(s) that you want to observe.
-     * You can subscribe to 'Object' to get told about all changes made
-     * in the Store.
-     */
-    public registerObserver(
-        observer: StoreObserver<S,M>,
-        ...mutationNames: string[]
-    ): InterestUnsubscriber
-    {
-        return this.extensions.add(observer, ...mutationNames);
-    }
-
-    /**
-     * `forEach()` is called by a {@link Store} just before it begins
+     * `prepare()` is called by a {@link Store} just before it begins
      * to apply the `mutation`.
      *
      * We pass the `mutation` to all of the registered observers. They
@@ -117,48 +65,49 @@ export class StoreObservers<
      *   with the operation of the Store). They should catch their own
      *   Errors.
      *
+     * @param observers
+     * The collection of observers that we will search to find the observers
+     * that have registered to be told about `mutation`.
      * @param mutation
-     * the change that the Store has been asked to apply
+     * The change that the Store has been asked to apply
      * @param initialState
-     * the calling Store's state BEFORE the mutation is applied
+     * The calling Store's state BEFORE the mutation is applied
+     * @param topics
+     * A list of topics to find handlers for.
      * @returns
-     * a function that the Store can call to tell the observers what
+     * A function that the Store can call to tell the observers what
      * happened after attempting to apply the `mutation`
      */
-    public forEach(
+    public static prepare<ST, M extends AnyMutation>(
+        observers: StoreObservers<ST,M>,
         mutation: M,
-        initialState: S,
-    ): OutcomeUpdater<S>
+        initialState: ST,
+        {
+            topics = getTopicsFromMutation(mutation)
+        }: {
+            topics?: NonEmptyArray<string>
+        } = {}
+    ): OutcomeUpdater<ST>
     {
-        // what are we going to tell our observers?
-        const storeEvent: ObservableEvent<S,M> = {
-            mutation,
-            initialState,
-            outcome: initialState,
-            createdAt: DateTime.local().toJSDate(),
-        }
-
         // keep track of how we're going to tell our observers
         // what the outcome us
-        const updaterFns: OutcomeUpdater<S>[] = [];
+        const updaterFns: OutcomeUpdater<ST>[] = [];
 
-        this.extensions.forEach((observer) => {
-            updaterFns.push(observer.beforeMutationApplied(storeEvent))
-        }, ...getClassNames(mutation));
+        observers.forEach(
+            (observer) => {
+                updaterFns.push(
+                    observer.beforeMutationApplied(
+                        mutation,
+                        initialState
+                    )
+                );
+            },
+            ...topics
+        );
 
-        return (outcome: AppErrorOr<S>, completedAt: Date) => {
-            // optimisation
-            if (updaterFns.length === 0) {
-                return;
-            }
-
-            // we need to avoid side-effects!
-            if (!(outcome instanceof AppError)) {
-                outcome = copy(outcome);
-            }
-
+        return (outcome: AppErrorOr<ST>) => {
             // spread the news
-            updaterFns.forEach((updaterFn) => updaterFn(outcome, completedAt));
+            updaterFns.forEach((updaterFn) => updaterFn(outcome));
         }
     }
 }

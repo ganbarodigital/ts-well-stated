@@ -32,9 +32,39 @@
 // POSSIBILITY OF SUCH DAMAGE.
 //
 
-export * from "./Mutation";
-export * from "./AnyMutation";
-export * from "./MutationHandler";
-export * from "./getTopicsFromMutation";
-export * from "./MutationHandlersOptions";
-export * from "./MutationHandlers";
+import { describe } from "mocha";
+import { expect } from "chai";
+import { getTopicsFromMutation } from "./getTopicsFromMutation";
+import { Mutation } from "./Mutation";
+
+interface MutationAData {
+    available: boolean;
+}
+class MutationA extends Mutation<MutationAData> {}
+
+describe("getTopicsFromMutation()", () => {
+    it("returns a list of class names", () => {
+        // ----------------------------------------------------------------
+        // setup your test
+
+        const expectedValue = [
+            "MutationA",
+            "Mutation",
+            "Object"
+        ];
+
+        const input = new MutationA({
+            available: false
+        });
+
+        // ----------------------------------------------------------------
+        // perform the change
+
+        const actualValue = getTopicsFromMutation(input);
+
+        // ----------------------------------------------------------------
+        // test the results
+
+        expect(actualValue).to.eql(expectedValue);
+    });
+});

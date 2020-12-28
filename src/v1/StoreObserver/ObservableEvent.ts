@@ -39,13 +39,13 @@ import { AnyState } from "../State";
 /**
  * `ObservableEvent` is a record of a change applied to a {@link Store}.
  *
- * @template S
- * - `S` is a type that describes all possible states of the store
+ * @template ST
+ * - `ST` is a type that describes all possible states of the store
  * @template M
  * - `M` is a type that describes all possible mutations that can be applied
  *   to the store
  */
-export interface ObservableEvent<S extends AnyState, M extends AnyMutation> {
+export interface ObservableEvent<ST extends AnyState, M extends AnyMutation> {
     /**
      * `mutation` is the data that has been passed to the store's list of
      * mutation handlers.
@@ -56,7 +56,7 @@ export interface ObservableEvent<S extends AnyState, M extends AnyMutation> {
      * `initialState` is the state of the store BEFORE the mutation handlers
      * were called.
      */
-    initialState: S;
+    initialState: ST;
 
     /**
      * `outcome` is a record of what happened when the mutation handlers
@@ -65,7 +65,7 @@ export interface ObservableEvent<S extends AnyState, M extends AnyMutation> {
      * - the {@link AppError} that was thrown (if something went wrong), or
      * - the (possibly modified) state of the Store
      */
-    outcome: AppErrorOr<Readonly<S>>;
+    outcome: AppErrorOr<Readonly<ST>>;
 
     /**
      * `created_at` tracks when this event was created

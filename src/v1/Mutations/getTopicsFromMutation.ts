@@ -32,9 +32,24 @@
 // POSSIBILITY OF SUCH DAMAGE.
 //
 
-export * from "./Mutation";
-export * from "./AnyMutation";
-export * from "./MutationHandler";
-export * from "./getTopicsFromMutation";
-export * from "./MutationHandlersOptions";
-export * from "./MutationHandlers";
+import { getClassNames, NonEmptyArray } from "@safelytyped/core-types";
+import { AnyMutation } from "./AnyMutation";
+
+/**
+ * `getTopicsFromMutation()` returns a list of strings that guards, observers
+ * et al might be listening for.
+ *
+ * Internally, it uses {@link getClassNames} to build the list of Store topics
+ * to return.
+ *
+ * @param input
+ * The mutation to examine.
+ * @returns
+ * A list of topics to use in the Store.
+ */
+export function getTopicsFromMutation(input: AnyMutation): NonEmptyArray<string>
+{
+    // yes, this is cheating, but we know it is always safe
+    // because every mutation is an object with a type
+    return getClassNames(input) as NonEmptyArray<string>;
+}

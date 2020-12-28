@@ -16,10 +16,8 @@
 // License along with this program. If not, see
 // <https://www.gnu.org/licenses/>.
 //
-import { AppErrorOr } from "@safelytyped/core-types";
 
 import { AnyMutation } from "../Mutations";
-import { AnyState } from "../State";
 import { Store, StoreOptions } from "../Store";
 
 /**
@@ -30,7 +28,7 @@ import { Store, StoreOptions } from "../Store";
  * - react: it can call the {@link Store} to apply more mutations
  * - reject: it can throw Errors to reject the mutation
  *
- * @template S
+ * @template ST
  * - `S` is a type that describes all possible states of the store
  * @template M
  * - `M` is a type that describes all possible mutations that can be applied
@@ -38,20 +36,16 @@ import { Store, StoreOptions } from "../Store";
  *
  * @param {M} mutation
  * - this is the state change that has been applied to the Store
- * @param {S} state
+ * @param {ST} state
  * - this is the new state in the store
- * @param {Store<S,M>} store
+ * @param {Store<ST,M>} store
  * - this is the store that the state is held within (in case you want to
  *   trigger more changes)
- *
- * @returns
- * - an {@link AppError} if this mutation causes a problem, or
- * - `null` otherwise
  */
-export type StoreSubscriber<S extends AnyState, M extends AnyMutation>
+export type StoreSubscriber<ST, M extends AnyMutation>
     = (
         mutation: M,
-        state: S,
-        store: Store<S,M>,
-        options?: Partial<StoreOptions>,
-    ) => AppErrorOr<null>;
+        state: ST,
+        store: Store<ST, M>,
+        options: StoreOptions,
+    ) => void;

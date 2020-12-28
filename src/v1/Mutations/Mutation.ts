@@ -32,18 +32,31 @@
 // POSSIBILITY OF SUCH DAMAGE.
 //
 
-import { AnyState } from "../State";
-
 /**
  * `Mutation` is the base class for all mutations.
  *
  * You *must* extend it for each type of mutation that your {@link Store}
  * supports. The {@link Store} uses the mutation's class name to find the
  * right handler(s) / observer(s) / subscriber(s) to process the mutation.
+ *
+ * @template T
+ * `T` is the type of data stored in the mutation. This does not have to
+ * be a subset of the Store's data type.
  */
-export class Mutation<S extends AnyState> {
-    public readonly data: S;
-    public constructor(data: S) {
+export class Mutation<T> {
+    /**
+     * `.data` holds the mutation's payload
+     */
+    public readonly data: T;
+
+    /**
+     * `.constructor()` builds a new instance of the Mutation.
+     *
+     * @param data
+     * The data that will be held within the mutation, and therefore
+     * passed into {@link Store.apply}
+     */
+    public constructor(data: T) {
         this.data = data;
     }
 }

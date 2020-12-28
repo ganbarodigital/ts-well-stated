@@ -33,8 +33,6 @@
 //
 import { AnyMutation } from "../Mutations";
 import { OutcomeUpdater } from "./OutcomeUpdater";
-import { ObservableEvent } from "./ObservableEvent";
-import { AnyState } from "../State";
 
 /**
  * `StoreObserver` is an object that wants to be told of changes made
@@ -49,13 +47,13 @@ import { AnyState } from "../State";
  * We've added them for debugging / unit testing support. You're welcome
  * to use them creatively.
  *
- * @template S
+ * @template ST
  * - `S` is a type that describes all possible states of the store
  * @template M
  * - `M` is a type that describes all possible mutations that can be applied
  *   to the store
  */
-export interface StoreObserver<S extends AnyState, M extends AnyMutation>
+export interface StoreObserver<ST, M extends AnyMutation>
 {
     /**
      * `beforeMutationApplied()` is called to notify the StoreObserver
@@ -67,5 +65,8 @@ export interface StoreObserver<S extends AnyState, M extends AnyMutation>
      * @returns a function that you need to call when the mutation has
      * completed
      */
-    beforeMutationApplied(event: ObservableEvent<S,M>): OutcomeUpdater<S>;
+    beforeMutationApplied(
+        mutation: M,
+        initialState: ST,
+    ): OutcomeUpdater<ST>;
 }

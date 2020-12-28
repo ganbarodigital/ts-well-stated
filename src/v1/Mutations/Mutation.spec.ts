@@ -32,15 +32,35 @@
 // POSSIBILITY OF SUCH DAMAGE.
 //
 
-import { OnError } from "@safelytyped/core-types";
-import { UnhandledMutationError } from "../Errors";
-import { StoreOptions } from "./StoreOptions";
+import { describe } from "mocha";
+import { expect } from "chai";
+import { Mutation } from "./Mutation";
 
-/**
- * `NotifyHandlersOptions` defines the list of user-supplied optional
- * dependencies that can be passed into any function or method that
- * calls {@link MutationHandler} functions.
- */
-export interface NotifyHandlersOptions extends StoreOptions {
-    onUnhandledMutation: OnError<UnhandledMutationError, void>,
+interface UnitTestMutationData {
+    unitTest: boolean;
 }
+
+class UnitTestMutation extends Mutation<UnitTestMutationData> {}
+
+describe("Mutation", () => {
+    describe(".constructor()", () => {
+        it("stores the given data in the new object", () => {
+            // --------------------------------------------------------------
+            // setup your test
+
+            const expectedValue = {
+                unitTest: true
+            };
+
+            // --------------------------------------------------------------
+            // perform the change
+
+            const unit = new UnitTestMutation(expectedValue);
+
+            // --------------------------------------------------------------
+            // test the results
+
+            expect(unit.data).to.eql(expectedValue);
+        });
+    });
+});

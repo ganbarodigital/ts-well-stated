@@ -32,5 +32,14 @@
 // POSSIBILITY OF SUCH DAMAGE.
 //
 
-export * from "./StoreGuard";
-export * from "./StoreGuards";
+import { OnError } from "@safelytyped/core-types";
+import { UnhandledMutationError } from "../Errors";
+
+/**
+ * `MutationHandlersOptions` defines the list of user-supplied optional
+ * dependencies that can be passed into any function or method that
+ * calls {@link MutationHandler} functions.
+ */
+export interface MutationHandlersOptions {
+    onUnhandledMutation: OnError<UnhandledMutationError, void>,
+}
